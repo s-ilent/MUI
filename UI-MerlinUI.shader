@@ -85,6 +85,17 @@ Shader "UI/MUI"
             fixed4 _TextureSampleAdd;
             float4 _ClipRect;
 
+            float4 _MainTex_TexelSize;
+
+            float2 sharpSample( float2 texResolution , float2 p )
+            {
+                p = p*texResolution;
+                float2 i = floor(p);
+                p = i + smoothstep(0, max(0.0001, fwidth(p)), frac(p));
+                p = (p - 0.5)/texResolution;
+                return p;
+            }
+
             v2f vert(appdata_t v, uint vertID : SV_VertexID)
             {
                 v2f OUT;
@@ -121,6 +132,7 @@ Shader "UI/MUI"
                 if (any(IN.generatedtexcoord > 1.0) || any(IN.generatedtexcoord < 0.0) )
                     texcoord = IN.centroidtexcoord;
 
+                texcoord = sharpSample(_MainTex_TexelSize.zw, texcoord);
                 half4 color = (tex2D(_MainTex, texcoord) + _TextureSampleAdd) * IN.color;
 
                 #ifdef UNITY_UI_CLIP_RECT
